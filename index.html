@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Weatherly - Modern Weather App</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div class="container">
+        <div class="header-content">
+          <div class="logo">
+            <i data-lucide="sun" class="logo-icon"></i>
+            <h1>Weather App</h1>
+          </div>
+          
+          <button class="menu-toggle" aria-label="Toggle menu">
+            <i data-lucide="menu" class="menu-icon"></i>
+          </button>
+
+          <nav class="nav">
+            <div class="nav-content">
+              <div class="search-bar">
+                <input type="text" placeholder="Search location..." id="searchInput">
+                <button id="searchBtn"><i data-lucide="search"></i></button>
+                <!-- <button class="unit-toggle">°C</button> -->
+              </div>
+            </div>
+          </nav>
+
+
+        </div>
+      </div>
+    </header>
+
+    <main class="main">
+      <div class="container">
+        <div class="current-weather">
+          <div class="weather-info">
+            <div class="location">
+              <i data-lucide="map-pin"></i>
+              <h2 class="city">City Name</h2>
+              <button class="favorite" aria-label="Add to favorites">
+                <!-- <i data-lucide="star"></i> -->
+              </button>
+            </div>
+            <div class="temperature">
+              <span class="temp-value">--</span>
+              <span class="temp-unit">°C</span>
+            </div>
+            <p class="condition">Condition</p>
+          </div>
+          
+          <div class="weather-details">
+            <div class="detail-card">
+              <i data-lucide="wind"></i>
+              <span class="value wind-speed-value">-- km/h</span>
+              <span class="label">Wind</span>
+            </div>
+            <div class="detail-card">
+              <i data-lucide="droplets"></i>
+              <span class="value humidity-value">--%</span>
+              <span class="label">Humidity</span>
+            </div>
+            <div class="detail-card">
+              <i data-lucide="gauge"></i>
+              <span class="value pressure-value">-- hPa</span>
+              <span class="label">Pressure</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="forecast">
+          <h3>7-Day Forecast</h3>
+          <div class="forecast-grid" id="forecastContainer">
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <p>Powered by OpenWeather API | Created with ❤️ by Awan Coder</p>
+    </footer>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+      lucide.createIcons();
+
+      const apiKey = "4fca510e603afb8f14a08ba90625ad48";
+      const weatherApiUrl = "https://api.openweathermap.org/data/2.5/weather?units=metric&q=";
+      const forecastApiUrl = "https://api.openweathermap.org/data/2.5/forecast?units=metric&q=";
+      
+      const searchBox = document.getElementById("searchInput");
+      const searchBtn = document.getElementById("searchBtn");
+      const forecastContainer = document.getElementById("forecastContainer");
+
+      async function fetchWeather(city) {
+        const response = await fetch(weatherApiUrl + city + `&appid=${apiKey}`);
+        const data = await response.json();
+
+        document.querySelector('.city').innerText = data.name;
+        document.querySelector('.temp-value').innerText = Math.round(data.main.temp);
+        document.querySelector('.pressure-value').innerText = data.main.pressure + " hPa";
+        document.querySelector('.humidity-value').innerText = data.main.humidity + "%";
+        document.querySelector('.wind-speed-value').innerText = data.wind.speed + " km/h";
+        document.querySelector('.condition').innerText = data.weather[0].description;
+      }
+
+      async function fetchForecast(city) {
+        const response = await fetch(forecastApiUrl + city + `&appid=${apiKey}`);
+        const data = await response.json();
+
+        forecastContainer.innerHTML = "";
+        const dailyData = {};
+
+        data.list.forEach(entry => {
+          const date = entry.dt_txt.split(" ")[0];
+          if (!dailyData[date]) {
+            dailyData[date] = entry;
+          }
+        });
+
+        Object.values(dailyData).slice(0, 7).forEach(day => {
+          const date = new Date(day.dt_txt);
+          const options = { weekday: 'short' };
+          const dayName = date.toLocaleDateString('en-US', options);
+          const temp = Math.round(day.main.temp);
+          const icon = day.weather[0].icon;
+          
+          const forecastCard = `
+            <div class="forecast-card">
+              <span class="day">${dayName}</span>
+              <img src="https://openweathermap.org/img/wn/${icon}.png" alt="${day.weather[0].description}">
+              <div class="temps">
+                <span class="high">${temp}°C</span>
+              </div>
+            </div>
+          `;
+          
+          forecastContainer.innerHTML += forecastCard;
+        });
+      }
+
+      searchBtn.addEventListener("click", () => {
+        const city = searchBox.value;
+        if (city) {
+          fetchWeather(city);
+          fetchForecast(city);
+        }
+      });
+    });
+  </script>
+</body>
+</html>
+o
